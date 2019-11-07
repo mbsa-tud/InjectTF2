@@ -12,7 +12,9 @@ import os
 import tensorflow as tf
 from tensorflow import keras
 
-from tensorflow.keras.layers import Dense, Flatten, Conv2D, Layer, Dropout
+import numpy as np
+
+from tensorflow.keras.layers import Dense, Flatten, Conv2D, Layer, Dropout, Lambda
 from tensorflow.keras import Model
 
 import InjectFaultsInLayer.LayerWrapper as LayerWrapper
@@ -71,8 +73,9 @@ def cloneFunction(layer):
     #     wrapped_layer = LayerWrapper.LayerWrapperDense(layer)
     # if type(layer) is Dropout:
     #     wrapped_layer = LayerWrapper.LayerWrapperDropout(layer)
-    wrapped_layer = LayerWrapper.LayerWrapper(layer)
-    return wrapped_layer
+    #wrapped_layer = LayerWrapper.LayerWrapper(layer)
+
+    return Lambda(lambda x: (layer.call(x)) * 0)
 
 
 clonedModel = tf.keras.models.clone_model(
@@ -87,11 +90,14 @@ clonedModel = tf.keras.models.clone_model(
 
 #model.evaluate(x_test, y_test, verbose=2)
 
-clonedModel.compile(
-     optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
-)
+# clonedModel.compile(
+#      optimizer="adam", loss="sparse_categorical_crossentropy", metrics=["accuracy"]
+# )
 
 clonedModel.summary()
+pred = np.argmax(clonedModel.predict(x_test[0,tf.newaxis]))
+truth = y_test[0]
+print(pred)
 
 #clonedModel.fit(x_train, y_train, epochs=5)
 
