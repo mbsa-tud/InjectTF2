@@ -95,9 +95,15 @@ clonedModel = tf.keras.models.clone_model(
 # )
 
 clonedModel.summary()
+pred_previous = np.argmax(model.predict(x_test[0,tf.newaxis]))
 pred = np.argmax(clonedModel.predict(x_test[0,tf.newaxis]))
 truth = y_test[0]
-print(pred)
+
+print('Y value without faults: {0} predicted value: {1}'.format(y_test[0], pred_previous))
+
+print('Y value with faults: {0} predicted value: {1}'.format(y_test[0], pred))
+
+
 
 #clonedModel.fit(x_train, y_train, epochs=5)
 
