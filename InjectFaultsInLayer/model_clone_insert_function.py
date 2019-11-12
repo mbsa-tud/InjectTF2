@@ -65,6 +65,10 @@ model.summary()
 
 # basicaly we try to inject another function to run in the layer
 
+def execute_lambda(layer, x):
+    #tf.print(x,summarize=-1)
+    return layer.call(x)
+
 def cloneFunction(layer):
     argument_layer = layer.__class__.from_config(layer.get_config())
     # if type(layer) is Flatten:
@@ -75,7 +79,7 @@ def cloneFunction(layer):
     #     wrapped_layer = LayerWrapper.LayerWrapperDropout(layer)
     # wrapped_layer = LayerWrapper.LayerWrapper(layer)
 
-    return Lambda(lambda x: (layer.call(x)) * 0)
+    return Lambda(lambda x: (execute_lambda(layer, x)))
 
 
 clonedModel = tf.keras.models.clone_model(
@@ -84,6 +88,14 @@ clonedModel = tf.keras.models.clone_model(
     clone_function=cloneFunction
 )
 
+model_list = []
+
+for layer in model.layers:
+    model_list.append(layer)
+
+for model in model_list:
+    model.
+print(model.layers)
 # model.fit(x_train, y_train, epochs=5)
 
 # model.evaluate(x_test, y_test, verbose=2)
@@ -96,34 +108,34 @@ clonedModel.summary()
 pred_previous = np.argmax(model.predict(x_test[0, tf.newaxis]))
 pred = np.argmax(clonedModel.predict(x_test[0, tf.newaxis]))
 truth = y_test[0]
-
 print('Y value without faults: {0} predicted value: {1}'.format(y_test[0], pred_previous))
 
 print('Y value with faults: {0} predicted value: {1}'.format(y_test[0], pred))
 
 # region why this doesnt work
-
-g = tf.Graph()
-
-
-@tf.function
-def custom_operation(x):
-    return x*0
-
-
-with g.as_default():
-    m = tf.keras.models.load_model("./InjectFaultsInLayer/model/" + "testModel.h5")
-    operations = m._graph.get_operations()
-    i_max = len(operations)
-    i = 0
-    while i < i_max:
-        if operations[i].type == 'Mul':
-            operations[i] = custom_operation(0)
-        i += 1
-    post_pred = np.argmax(m.predict(x_test[0, tf.newaxis]))
-    m.summary()
-
-    print('Y value with faults in ops: {0} predicted value: {1}'.format(y_test[0], post_pred))
+#
+# g = tf.Graph()
+#
+#
+# @tf.function
+# def custom_operation(x):
+#     return x*0
+#
+#
+# with g.as_default():
+#     m = tf.keras.models.load_model("./InjectFaultsInLayer/model/" + "testModel.h5")
+#     operations = m._graph.get_operations()
+#     graph_for_changes = m._graph
+#     i_max = len(operations)
+#     i = 0
+#     while i < i_max:
+#         if operations[i].type == 'Mul':
+#             operations[i] = custom_operation(0)
+#         i += 1
+#     post_pred = np.argmax(m.predict(x_test[0, tf.newaxis]))
+#     m.summary()
+#
+#     print('Y value with faults in ops: {0} predicted value: {1}'.format(y_test[0], post_pred))
 
 # endregion
 
