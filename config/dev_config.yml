@@ -1,0 +1,5 @@
+inject_layer_number:
+  2:
+    probability: 1.0
+    fault_type: BitFlip
+    elements: all
