@@ -31,6 +31,9 @@ class InjectTF2:
 
         self.input_data = input_data
 
+        # TODO
+        # Validate user inputs
+
         self.golden_run = self._execute_golden_run(input_data)
         self.golden_run_layers = self._execute_golden_run_layers(input_data)
 
@@ -53,14 +56,6 @@ class InjectTF2:
         return result
 
     def run_experiments(self, input_data):
-
-        # selected_layers = self.cm.get_selected_layers()
-        #
-        # logging.debug(
-        #     "The following layers are selected for injection: {0}".format(
-        #         selected_layers
-        #     )
-        # )
 
         results = []
 
