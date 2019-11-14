@@ -18,4 +18,4 @@ class InjectionManager:
         logging.debug("initialized InjectionManager")
 
     def inject(self, output_val, layer_config):
-        return output_val * 100
+        return output_val  # TODO
