@@ -22,7 +22,5 @@ x_train, x_test = x_train / 255.0, x_test / 255.0
 
 
 itf2 = InjectTF2(
-    "./model/simple_mnist_model.h5", "./config/dev_config.yml", "", "DEBUG"
+    "./model/simple_mnist_model.h5", "./config/dev_config.yml", x_test, "DEBUG"
 )
-
-itf2.run_experiments()

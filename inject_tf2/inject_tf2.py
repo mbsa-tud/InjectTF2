@@ -33,6 +33,7 @@ class InjectTF2:
 
         self.golden_run = self.execute_golden_run(input_data)
         self.golden_run_layers = self.execute_golden_run_layers(input_data)
+        self.run_experiments(input_data)
 
     def execute_golden_run(self, data):
         return self.mm.get_org_model().predict(data)
@@ -52,7 +53,7 @@ class InjectTF2:
 
         return result
 
-    def run_experiments(self):
+    def run_experiments(self, input_data):
 
         selected_layers = self.cm.get_selected_layers()
 
@@ -66,18 +67,18 @@ class InjectTF2:
 
         for i, layer in enumerate(self.mm.get_layer_models()):
 
-            if self.cm.is_selected_for_inj(i, layer):
+            if self.cm.is_selected_for_inj(i+1, layer):
 
                 # Compute output of layer
                 # If first layer
-                if i == 1:
+                if i == 0:
                     output_val = layer.predict(input_data)
 
                 else:
                     output_val = layer.predict(results[i - 1])
 
                 inj_res = self.im.inject(
-                    output_val, self.cm.get_config_for_layer(i, layer)
+                    output_val, self.cm.get_config_for_layer(i+1, layer)
                 )
 
                 results.append(inj_res)
@@ -85,8 +86,10 @@ class InjectTF2:
             else:
 
                 # If first layer
-                if i == 1:
-                    result.append(layer.predict(input_data))
+                if i == 0:
+                    results.append(layer.predict(input_data))
 
                 else:
-                    result.append(layer.predict(results[i - 1]))
+                    results.append(layer.predict(results[i - 1]))
+
+            return results
