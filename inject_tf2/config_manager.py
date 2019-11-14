@@ -45,3 +45,6 @@ class ConfigurationManager:
     def get_data(self):
         """Returns a dictionary containing the complete data of the configuration file."""
         return self.__config_data
+
+    def get_selected_layers(self):
+        return self.__config_data["inject_layer_number"]
