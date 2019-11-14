@@ -3,3 +3,15 @@ inject_layer_number:
     probability: 1.0
     fault_type: BitFlip
     elements: all
+  1:
+    probability: 1.0
+    fault_type: BitFlip
+    elements: all
+  3:
+    probability: 1.0
+    fault_type: BitFlip
+    elements: all
+  4:
+    probability: 1.0
+    fault_type: BitFlip
+    elements: all
