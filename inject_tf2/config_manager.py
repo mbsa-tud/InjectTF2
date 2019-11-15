@@ -5,9 +5,9 @@
 # TU-Dresden, Institute of Automation (IfA)
 #
 
-import yaml
-
+import inject_tf2.string_res as str_res
 import logging
+import yaml
 
 
 class ConfigurationManager:
@@ -47,10 +47,10 @@ class ConfigurationManager:
         return self.__config_data
 
     def is_selected_for_inj(self, i, layer):
-        return i in self.__config_data["inject_layer_number"]
+        return i in self.__config_data[str_res.inject_layer_number_str]
 
     def get_config_for_layer(self, i, layer):
-        return self.__config_data["inject_layer_number"][i]
+        return self.__config_data[str_res.inject_layer_number_str][i]
 
     def get_selected_layers(self):
-        return self.__config_data["inject_layer_number"]
+        return self.__config_data[str_res.inject_layer_number_str]

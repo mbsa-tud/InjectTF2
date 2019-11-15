@@ -36,11 +36,13 @@ print(len(exp_res[0]))
 print(len(itf2.golden_run_layers))
 print(len(itf2.golden_run_layers[0]))
 
-
+diff_expt_gold_layers = exp_res[-1] - itf2.golden_run_layers[-1]
 print("\n\nDifference is: \n {0}".format(exp_res[-1] - itf2.golden_run_layers[-1]))
 print("Golden run minus exp: {0}".format(exp_res[-1] - itf2.golden_run))
 print("Difference golden run: {0}".format(itf2.golden_run - itf2.golden_run_layers[-1]))
 
 print(exp_res[-1].shape)
-diff = np.argmax(exp_res[-1] - itf2.golden_run_layers[-1])
+diff = np.argmax(diff_expt_gold_layers)
 print(diff)
+ind = np.unravel_index(np.argmax(diff_expt_gold_layers, axis=None), diff_expt_gold_layers.shape)
+print(diff_expt_gold_layers[ind])
