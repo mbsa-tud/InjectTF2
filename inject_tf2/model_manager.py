@@ -8,45 +8,48 @@
 import logging
 
 import tensorflow as tf
+from tensorflow.python.keras import backend as K
 
 
 class ModelManager:
-    def __init__(self, path_to_model):
+    def __init__(self, path_to_model, batched_tf_dataset, batch_size):
         self.org_model = tf.keras.models.load_model(path_to_model)
 
-        self.layer_models = self._create_layer_models(self.org_model)
-
-    # Splits the provided model into its individual layers and
-    # creats a model for each layer. That way each layer can be
-    # executed separately.
-    def _create_layer_models(self, model):
-
-        logging.debug("Creating models for each layer...")
-
-        layer_models = []
-
-        def clone_function(layer):
-
-            logging.debug("Creating model for layer {0}".format(layer))
-
-            layer_models.append(tf.keras.models.Sequential([layer]))
-            return layer
-
-        tf.keras.models.clone_model(model=self.org_model, clone_function=clone_function)
-
-        logging.debug(
-            "All models created! Resulting layer model list is:\n{0}".format(
-                layer_models
-            )
+        self.layer_output_values = self._get_layer_output_values_for_layer(
+            self.org_model, layer_name, batched_tf_dataset, batch_size
         )
 
-        return layer_models
+    def _get_layer_output_values_for_layer(
+        self, model, layer_name, batched_tf_dataset, batch_size
+    ):
+
+        # Get the output tensor for the selected layer.
+        layer_output_tensor = model.get_layer(layer_name).output
+
+        # Create a function which evaluates the output tensor for
+        # the selected layer and returns its values
+        functor = K.function(model.inputs, layer_output_tensor)
+
+        # Allocate memory for the output values
+        num_of_batches = 0
+        for _ in batched_tf_dataset:
+            num_of_batches += 1
+
+        layer_output_values = np.zeros(
+            (num_of_batches, batch_size, *layer_output_tensor.shape[1:])
+        )
+
+        # Get the output values for the input data.
+        for i, batch in enumerate(batched_tf_dataset):
+            layer_output_values[i] = functor(batch)
+
+        return layer_output_values
 
     def get_org_model(self):
-        """Returns the original, provided model"""
+        """Returns the provided model"""
         return self.org_model
 
-    def get_layer_models(self):
-        """Returns a list containing the individual layers of the original model
-        as models."""
-        return self.layer_models
+    def get_layer_output_tensors_and_values(self):
+        """Returns a list containing the output tensors for each layer and the
+        layers output for the provided test data."""
+        return self.layer_output_values
