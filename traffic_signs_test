@@ -1,0 +1,146 @@
+# dev testing setup
+
+import numpy as np
+import os
+import pandas as pd
+import PreProcessing as pp
+import skimage as ski
+import tensorflow as tf
+from inject_tf2.inject_tf2 import InjectTF2
+
+# Print the TensorFlow version
+print(f"TensorFlow version: {tf.version.VERSION}")
+
+# - - - - - Variables - - - - -
+save_path = "./model/"
+model_name_traffic_signs = 'logssimple_cnn_test_model.h5'
+test_pickle = './dataset/test_processed.pickle'
+# CSV containing the classID for each GTSRB image
+gtsrb_class_csv = "./dataset/GT-final_test.csv"
+
+# CSV containing the corresponding sign names for each GTSRB class id
+signnames_csv = "./dataset/signnames.csv"
+
+
+# - - - - - - - - - - - - - - -
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+# HELPER FUNCTIONS
+# - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+# Returns the sign name based on the sign class ID
+# (e.g. class id `0` corresponds to the sign name "Speed limit (20km/h)")
+def getSignNameFromClassID(id, sign_name_csv):
+    csv = pd.read_csv(sign_name_csv, sep=",")
+    return csv["SignName"][id]
+
+
+# Returns the class ID based on the image name.
+# Each image (the file) of the GTSRB dataset has an unique name which can be used
+# to get the class ID using the provided GTSRB CSV file.
+def getClassIDFromImageName(name, dataset_class_csv):
+    csv = pd.read_csv(dataset_class_csv, sep=";")
+    return csv["ClassId"][int(name)]
+
+
+# Fetches the data from the pickle file.
+# Returns four arrays:
+#   - the images,
+#   - the corresponding class IDs,
+#   - the corresponding sign names,
+#   - the number of unique classes (i.e. the number of classes in the dataset)
+def fetchPickleData(pickle_file, dataset_class_csv, class_names_csv):
+    imgs, classIDs = pp.load_data(pickle_file)
+
+    signNamesForIDs = [getSignNameFromClassID(id, class_names_csv) for id in classIDs]
+
+    unique_classes = len(pd.read_csv(class_names_csv, sep=",")["ClassId"])
+
+    return imgs, classIDs, signNamesForIDs, unique_classes
+
+
+# Fetches the data from the raw GTSRB dataset images.
+# Returns four arrays:
+#   - the images,
+#   - the corresponding class IDs,
+#   - the corresponding sign names,
+#   - the number of unique classes (i.e. the number of classes in the dataset)
+def fetchImageData(path_to_imgs, dataset_class_csv, class_names_csv):
+    # All images are gathered, their classID determined based on the image's name
+    # and preprocessed (in contrary to the function above: the pickled files already
+    # contain those informations along with the preprocessed images).
+    imgs = [file for file in os.listdir(path_to_imgs) if file.endswith(".ppm")]
+    img_names = [filename.split(".")[0] for filename in imgs]
+
+    classIDs = [getClassIDFromImageName(name, dataset_class_csv) for name in img_names]
+
+    # Preprocess data
+    imgs = [ski.img_as_float(pp.image_normalizer(path_to_imgs + img)) for img in imgs]
+
+    signNamesForIDs = [getSignNameFromClassID(id, class_names_csv) for id in classIDs]
+
+    unique_classes = len(pd.read_csv(class_names_csv, sep=",")["ClassId"])
+
+    return imgs, classIDs, signNamesForIDs, unique_classes
+
+
+# Caluclates the accuracy for a prediction based on the ground truth.
+def calc_accuracy(pred, truth):
+    pred = np.argmax(pred, axis=1)
+    ret = np.empty(pred.shape, float)
+    correct_pred = np.equal(pred, truth, out=ret)
+    accuracy = np.mean(correct_pred)
+    return accuracy
+
+
+x_test = fetchPickleData(test_pickle, gtsrb_class_csv, signnames_csv)
+
+itf2 = InjectTF2(
+    save_path + model_name_traffic_signs, "./config/dev_config.yml", x_test, "DEBUG"
+)
+
+exp_res = itf2.run_experiments(x_test)
+# print(len(exp_res))
+# print(len(exp_res[0]))
+
+
+# print("Exp res arg max: {0}".format(np.argmax(exp_res[-1])))
+# print(np.argmax(itf2.golden_run_layers))
+print("Number of layers: ", len(itf2.golden_run_layers))
+print("Number of images: ", len(itf2.golden_run_layers[0]))
+print("Number of clusters: ", len(itf2.golden_run_layers[-1][-1]))
+
+diff_expt_gold_layers = exp_res[-1] - itf2.golden_run_layers[-1]
+diff_golden_runs = itf2.golden_run - itf2.golden_run_layers[-1]
+# print("\n\nDifference is: \n {0}".format(exp_res[-1] - itf2.golden_run_layers[-1]))
+# print("Golden run minus exp: {0}".format(exp_res[-1] - itf2.golden_run))
+# print("Difference golden run: {0}".format(itf2.golden_run - itf2.golden_run_layers[-1]))
+print("Time spent for golden run (layers): ", itf2.time_golden_layers)
+print("Experiment run (shape): ", exp_res[-1].shape)
+diff = np.argmax(diff_expt_gold_layers)
+print("Experiment run minus golden run layers (max difference index): ", diff)
+ind = np.unravel_index(np.argmax(diff_expt_gold_layers, axis=None), diff_expt_gold_layers.shape)
+print("Experiment run minus golden run layers (max difference value): ", diff_expt_gold_layers[ind])
+print("Golden run layers (shape): ", itf2.golden_run_layers[-1].shape)
+diff = np.argmax(diff_golden_runs)
+print("Golden run model minus golden run layers (max difference index): ", diff)
+ind = np.unravel_index(np.argmax(diff_golden_runs, axis=None), diff_golden_runs.shape)
+print("Golden run model minus golden run layers (max difference value): ", diff_golden_runs[ind])
+
+predicted_classes = []
+
+for array in itf2.golden_run_layers[-1]:
+    predicted_classes.append(np.argmax(array))
+
+successful_predictions_sum = sum(predicted_classes == x_test[1])
+accuracy = successful_predictions_sum / len(x_test[1])
+print("Started accuracy", accuracy)
+
+predicted_classes = []
+
+for array in exp_res[-1]:
+    predicted_classes.append(np.argmax(array))
+
+successful_predictions_sum = sum(predicted_classes == x_test[1])
+accuracy = successful_predictions_sum / len(x_test[1])
+print("Started accuracy", accuracy)

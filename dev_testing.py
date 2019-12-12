@@ -12,8 +12,9 @@ from inject_tf2.inject_tf2 import InjectTF2
 print(f"TensorFlow version: {tf.version.VERSION}")
 
 # - - - - - Variables - - - - -
-save_path = "./model"
+save_path = "./model/"
 model_name = "simple_mnist_model.h5"
+model_name_traffic_signs = 'logssimple_cnn_test_model.h5'
 # - - - - - - - - - - - - - - -
 
 mnist = tf.keras.datasets.mnist
@@ -22,8 +23,12 @@ mnist = tf.keras.datasets.mnist
 x_train, x_test = x_train / 255.0, x_test / 255.0
 
 
+# itf2 = InjectTF2(
+#     "./model/simple_mnist_model.h5", "./config/dev_config.yml", x_test, "DEBUG"
+# )
+
 itf2 = InjectTF2(
-    "./model/simple_mnist_model.h5", "./config/dev_config.yml", x_test, "DEBUG"
+    save_path + model_name_traffic_signs, "./config/dev_config.yml", x_test, "DEBUG"
 )
 
 exp_res = itf2.run_experiments(x_test)
