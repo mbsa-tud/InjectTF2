@@ -12,7 +12,7 @@ from tensorflow.python.keras import backend as K
 
 
 class ModelManager:
-    def __init__(self, path_to_model, batched_tf_dataset, batch_size):
+    def __init__(self, path_to_model, layer_name, batched_tf_dataset, batch_size):
         self.org_model = tf.keras.models.load_model(path_to_model)
 
         self.layer_output_values = self._get_layer_output_values_for_layer(
@@ -50,6 +50,6 @@ class ModelManager:
         return self.org_model
 
     def get_layer_output_tensors_and_values(self):
-        """Returns a list containing the output tensors for each layer and the
-        layers output for the provided test data."""
+        """Returns the output values for the selected layer
+        for the provided test data."""
         return self.layer_output_values
