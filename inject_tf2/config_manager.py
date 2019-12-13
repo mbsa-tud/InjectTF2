@@ -5,20 +5,21 @@
 # TU-Dresden, Institute of Automation (IfA)
 #
 
-import inject_tf2.string_res as str_res
 import logging
 import yaml
 
+import inject_tf2.string_res as str_res
+
 
 class ConfigurationManager:
-    def __init__(self, path_to_config_file="./config/InjectTF_conf.yml"):
+    def __init__(self, path_to_config_file="./config/InjectTF2_conf.yml"):
         """InjectTF2 configuration class.
 
         This class handles reading and parsing the yaml configuration file.
 
         Args:
             path_to_config_file (str): Path to the configuration file. Defaults to
-                "./config/InjectTF_conf.yml".
+                "./config/InjectTF2_conf.yml".
         """
 
         self.__config_data = self.__read_config(path_to_config_file)
@@ -46,11 +47,6 @@ class ConfigurationManager:
         """Returns a dictionary containing the complete data of the configuration file."""
         return self.__config_data
 
-    def is_selected_for_inj(self, i, layer):
-        return i in self.__config_data[str_res.inject_layer_number_str]
-
-    def get_config_for_layer(self, i, layer):
-        return self.__config_data[str_res.inject_layer_number_str][i]
-
-    def get_selected_layers(self):
-        return self.__config_data[str_res.inject_layer_number_str]
+    def get_selected_layer(self):
+        """Returns the name of the selected layer."""
+        return self.__config_data[str_res.inject_layer][str_res.layer_name]
