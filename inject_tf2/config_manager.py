@@ -49,4 +49,4 @@ class ConfigurationManager:
 
     def get_selected_layer(self):
         """Returns the name of the selected layer."""
-        return self.__config_data[str_res.inject_layer][str_res.layer_name]
+        return self.__config_data[str_res.inject_layer_str][str_res.layer_name_str]
