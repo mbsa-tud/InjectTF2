@@ -17,11 +17,11 @@ class ModelManager:
 
         self._selected_layer = self._org_model.get_layer(layer_name)
 
-        self._layer_output_values = self._get_layer_output_values_for_layer(
+        self._layer_output_values = self._get_output_values_for_selected_layer(
             batched_tf_dataset, batch_size
         )
 
-    def _get_layer_output_values_for_layer(self, batched_tf_dataset, batch_size):
+    def _get_output_values_for_selected_layer(self, batched_tf_dataset, batch_size):
 
         # Get the output tensor for the selected layer.
         layer_output_tensor = self._selected_layer.output
@@ -47,12 +47,12 @@ class ModelManager:
 
     def get_org_model(self):
         """Returns the provided model"""
-        return self.org_model
+        return self._org_model
 
-    def get_layer_output_tensors_and_values(self):
+    def get_selected_layer_output_values(self):
         """Returns the output values for the selected layer
         for the provided test data."""
-        return self.layer_output_values
+        return self._layer_output_values
 
     def predict_func_from_layer(self):
         """Returns a prediction function which feed its input argument into the
