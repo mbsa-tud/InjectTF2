@@ -36,13 +36,13 @@ class InjectTF2:
         # Create a batched dataset. Since the values for the layer that is selected
         # for injection are stored later on, `drop_remainder` is set to `True`
         # (that way a uniform numpy can be pre-allocated).
-        self.batched_ds = tf_dataset.batched(batch_size, drop_remainder=True)
+        self.batched_ds = tf_dataset.batch(batch_size, drop_remainder=True)
 
         self.mm = ModelManager(
             path_to_model, self.cm.get_selected_layer(), self.batched_ds, batch_size
         )
 
-        self.golden_run = self._execute_golden_run(input_data)
+        self.golden_run = self._execute_golden_run(self.batched_ds)
 
     def _execute_golden_run(self, batched_tf_dataset):
         return self.mm.get_org_model().evaluate(batched_tf_dataset)
