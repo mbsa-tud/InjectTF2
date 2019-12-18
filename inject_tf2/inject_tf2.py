@@ -8,6 +8,7 @@
 import os
 import logging
 
+import numpy as np
 import tensorflow as tf
 
 from inject_tf2.injection_manager import InjectionManager
@@ -47,37 +48,65 @@ class InjectTF2:
     def _execute_golden_run(self, batched_tf_dataset):
         return self.mm.get_org_model().evaluate(batched_tf_dataset)
 
-    # TODO Refactor, DEPRECATED
-    def run_experiments(self, input_data):
+    def _calc_accuracy_for_batch(self, pred_batch, truth_batch):
 
-        # results = []
+        pred_batch = np.argmax(pred_batch, axis=1)
 
-        # for i, layer in enumerate(self.mm.get_layer_models()):
+        # Check for one-hot encoded ground truth labels.
+        if len(truth_batch.shape) > 1:
+            truth_batch = np.argmax(truth_batch, axis=1)
 
-        #     if self.cm.is_selected_for_inj(i + 1, layer):
+        ret = np.zeros(pred_batch.shape, np.float)
+        correct_pred = np.equal(pred_batch, truth_batch, out=ret)
+        accuracy = np.mean(correct_pred)
+        return accuracy
 
-        #         # Compute output of layer
-        #         # If first layer
-        #         if i == 0:
-        #             output_val = layer.predict(input_data)
+    def run_experiments(self):
 
-        #         else:
-        #             output_val = layer.predict(results[i - 1])
+        logging.info("Starting experiment...")
 
-        #         inj_res = self.im.inject(
-        #             output_val, self.cm.get_config_for_layer(i + 1, layer)
-        #         )
+        # Compute reference "golden run" `accuracy` without fault injection
+        # and the `inj_accuracy` for the predictions obtained when executing
+        # the model from the selected layer onward.
+        accuracy = 0
+        inj_accuracy = 0
 
-        #         results.append(inj_res)
+        for input_values, batch in zip(
+            self.mm.get_selected_layer_output_values(), self.batched_ds
+        ):
 
-        #     else:
+            # Get the prediction function for the selected layer.
+            predict = self.mm.predict_func_from_layer()
 
-        #         # If first layer
-        #         if i == 0:
-        #             results.append(layer.predict(input_data))
+            # `predict()` returns the predictions for the current
+            # `input_values` batch wrapped in a list.
+            result = predict(input_values)
 
-        #         else:
-        #             results.append(layer.predict(results[i - 1]))
+            # Predict again with (possibly) fault injected values
+            inj_result = predict(self.im.inject_batch(input_values, self.cm.get_data()))
 
-        # return results
-        return
+            # Caluculate accuracy and inj_accuracy for current batch.
+            # result[0]: array containing the predictions
+            # inj_result[0]: array containing the injected predictions
+            # batch[1]: ground truth labels from the dataset
+            accuracy += self._calc_accuracy_for_batch(result[0], batch[1])
+            inj_accuracy += self._calc_accuracy_for_batch(inj_result[0], batch[1])
+
+        # Divide accumulated accuracy by number of batches.
+        accuracy = accuracy / self.mm.get_selected_layer_output_values().shape[0]
+        inj_accuracy = (
+            inj_accuracy / self.mm.get_selected_layer_output_values().shape[0]
+        )
+
+        logging.info("Done.")
+        logging.info(
+            "Golden run accuracy for original model is: {}".format(self.golden_run[1])
+        )
+        logging.info(
+            "Golden run accuracy for predictions from selected layer is: {}".format(
+                accuracy
+            )
+        )
+        logging.info("Resulting accuracy after injection is: {}".format(inj_accuracy))
+
+        return accuracy
