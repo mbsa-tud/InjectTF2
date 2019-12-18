@@ -1,4 +1,5 @@
 inject_layer:
-  layer_name: "name"
+  layer_name: layer_name
   fault_type: BitFlip
+  bit_flip_type: RandomBit
   probability: 1.0
