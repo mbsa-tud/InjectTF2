@@ -1,0 +1,7 @@
+# Configuration file for test_configuration_manager.py
+inject_layer:
+  layer_name: "test_layer_name"
+  fault_type: "test_fault_type"
+  bit_flip_type: RandomBit
+  bit_number: 31
+  probability: 1.0
