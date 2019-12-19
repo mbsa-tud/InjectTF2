@@ -83,7 +83,9 @@ class InjectTF2:
             result = predict(input_values)
 
             # Predict again with (possibly) fault injected values
-            inj_result = predict(self.im.inject_batch(input_values, self.cm.get_data()))
+            inj_result = predict(
+                self.im.inject_batch(np.copy(input_values), self.cm.get_data())
+            )
 
             # Caluculate accuracy and inj_accuracy for current batch.
             # result[0]: array containing the predictions
