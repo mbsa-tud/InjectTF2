@@ -91,9 +91,7 @@ class InjectTF2:
                 result = predict(input_values)
 
             else:
-                result = predict(
-                    self.im.inject_batch(np.copy(input_values), self.cm.get_data())
-                )
+                result = predict(self.im.inject_batch(input_values, self.cm.get_data()))
 
             # Caluculate accuracy for current batch.
             # result[0]: array containing the predictions

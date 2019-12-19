@@ -18,6 +18,10 @@ class InjectionManager:
 
     def inject_batch(self, batch_output_values, layer_inj_config):
 
+        # Create a copy of the output values, otherwise the `original` values will be modified
+        # since the array is updated by directly accessing the elements in line 42.
+        batch_output_values_cp = np.copy(batch_output_values)
+
         # Get the probability for fault injection for the selected layer.
         layer_inj_probability = layer_inj_config[str_res.inject_layer_str][
             str_res.probability_str
@@ -25,7 +29,7 @@ class InjectionManager:
 
         # For each sample in the batch generate a random number and compare it
         # to the specified fault injection probabilty.
-        for i, sample in enumerate(batch_output_values):
+        for i, sample in enumerate(batch_output_values_cp):
             random_number = np.random.rand()
 
             if layer_inj_probability > random_number:
@@ -35,9 +39,9 @@ class InjectionManager:
                     layer_inj_config[str_res.inject_layer_str][str_res.fault_type_str]
                 ](sample, layer_inj_config)
 
-                batch_output_values[i] = result
+                batch_output_values_cp[i] = result
 
-        return batch_output_values
+        return batch_output_values_cp
 
     @staticmethod
     def _get_bit_flipped_value(element_val, bit_number=None):
