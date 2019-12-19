@@ -43,10 +43,17 @@ class InjectTF2:
             path_to_model, self.cm.get_selected_layer(), self.batched_ds, batch_size
         )
 
-        self.golden_run = self._execute_golden_run(self.batched_ds)
+    def evaluate_golden_run_model(self):
+        """Evaluates the model using the `.evaluate()` function with the provided dataset."""
+        return self.mm.get_org_model().evaluate(self.batched_ds)
 
-    def _execute_golden_run(self, batched_tf_dataset):
-        return self.mm.get_org_model().evaluate(batched_tf_dataset)
+    def evaluate_golden_run_layer(self):
+        """Returns the reference accuracy for the predictions obtained when executing from the selected layer onwards."""
+        return self._get_predictions_from_layer()
+
+    def evaluate_layer_with_injections(self):
+        """Returns the accuracy for the predictions obtained when when executing from the selected layer onwards with fault injections."""
+        return self._get_predictions_from_layer(inject=True)
 
     def _calc_accuracy_for_batch(self, pred_batch, truth_batch):
 
@@ -58,18 +65,16 @@ class InjectTF2:
 
         ret = np.zeros(pred_batch.shape, np.float)
         correct_pred = np.equal(pred_batch, truth_batch, out=ret)
-        accuracy = np.mean(correct_pred)
+        accuracy = np.mean(correct_pred, dtype=np.float64)
         return accuracy
 
-    def run_experiments(self):
+    def _get_predictions_from_layer(self, inject=False):
 
-        logging.info("Starting experiment...")
+        logging.info("Starting prediction from selected layer...")
 
-        # Compute reference "golden run" `accuracy` without fault injection
-        # and the `inj_accuracy` for the predictions obtained when executing
-        # the model from the selected layer onward.
+        # Compute `accuracy` for the predictions obtained when executing
+        # the model from the selected layer onwards.
         accuracy = 0
-        inj_accuracy = 0
 
         for input_values, batch in zip(
             self.mm.get_selected_layer_output_values(), self.batched_ds
@@ -78,37 +83,27 @@ class InjectTF2:
             # Get the prediction function for the selected layer.
             predict = self.mm.predict_func_from_layer()
 
+            result = None
+
             # `predict()` returns the predictions for the current
             # `input_values` batch wrapped in a list.
-            result = predict(input_values)
+            if not inject:
+                result = predict(input_values)
 
-            # Predict again with (possibly) fault injected values
-            inj_result = predict(
-                self.im.inject_batch(np.copy(input_values), self.cm.get_data())
-            )
+            else:
+                result = predict(
+                    self.im.inject_batch(np.copy(input_values), self.cm.get_data())
+                )
 
-            # Caluculate accuracy and inj_accuracy for current batch.
+            # Caluculate accuracy for current batch.
             # result[0]: array containing the predictions
-            # inj_result[0]: array containing the injected predictions
             # batch[1]: ground truth labels from the dataset
             accuracy += self._calc_accuracy_for_batch(result[0], batch[1])
-            inj_accuracy += self._calc_accuracy_for_batch(inj_result[0], batch[1])
 
         # Divide accumulated accuracy by number of batches.
         accuracy = accuracy / self.mm.get_selected_layer_output_values().shape[0]
-        inj_accuracy = (
-            inj_accuracy / self.mm.get_selected_layer_output_values().shape[0]
-        )
 
         logging.info("Done.")
-        logging.info(
-            "Golden run accuracy for original model is: {}".format(self.golden_run[1])
-        )
-        logging.info(
-            "Golden run accuracy for predictions from selected layer is: {}".format(
-                accuracy
-            )
-        )
-        logging.info("Resulting accuracy after injection is: {}".format(inj_accuracy))
+        logging.info("Resulting accuracy is: {}".format(accuracy))
 
         return accuracy
