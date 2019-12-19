@@ -1,0 +1,7 @@
+# Configuration file for test_injection_manager.py
+inject_layer:
+  layer_name: "test_layer_name"
+  fault_type: BitFlip
+  bit_flip_type: SpecificBit
+  bit_number: 30
+  probability: 1.0
