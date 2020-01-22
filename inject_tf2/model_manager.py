@@ -36,9 +36,11 @@ class ModelManager:
         for _ in batched_tf_dataset:
             num_of_batches += 1
 
+        # Determine the dataset's dtype.
+        ds_dtype =  batched_tf_dataset.element_spec[0].dtype.as_numpy_dtype
+
         layer_output_values = np.zeros(
-            (num_of_batches, batch_size, *layer_output_tensor.shape[1:])
-        )
+            (num_of_batches, batch_size, *layer_output_tensor.shape[1:]), dtype=ds_dtype)
 
         # Get the output values for the input data.
         for i, batch in enumerate(batched_tf_dataset):
