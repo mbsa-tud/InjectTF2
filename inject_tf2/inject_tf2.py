@@ -105,3 +105,32 @@ class InjectTF2:
         logging.info("Resulting accuracy is: {}".format(accuracy))
 
         return accuracy
+
+    def get_top_k_from_layer(self, inject=False, k=1):
+        logging.info("Starting top k prediction from selected layer...")
+
+        res_top_k_batched = []
+
+        for input_values, batch in zip(
+            self.mm.get_selected_layer_output_values(), self.batched_ds
+        ):
+
+            # Get the prediction function for the selected layer.
+            predict = self.mm.predict_func_from_layer()
+
+            result = None
+
+            # `predict()` returns the predictions for the current
+            # `input_values` batch wrapped in a list.
+            if not inject:
+                result = predict(input_values)
+
+            else:
+                result = predict(self.im.inject_batch(input_values, self.cm.get_data()))
+
+            res_top_k_batched.append(tf.math.top_k(result, k=k))
+
+
+        logging.info("Done.")
+
+        return res_top_k_batched
