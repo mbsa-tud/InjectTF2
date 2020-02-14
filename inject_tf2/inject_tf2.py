@@ -19,7 +19,8 @@ from inject_tf2.config_manager import ConfigurationManager
 class InjectTF2:
     def __init__(
         self,
-        path_to_model,
+        #path_to_model,
+        model,
         path_to_config,
         tf_dataset,
         batch_size,
@@ -40,7 +41,7 @@ class InjectTF2:
         self.batched_ds = tf_dataset.batch(batch_size, drop_remainder=True)
 
         self.mm = ModelManager(
-            path_to_model, self.cm.get_selected_layer(), self.batched_ds, batch_size
+            model, self.cm.get_selected_layer(), self.batched_ds, batch_size
         )
 
     def evaluate_golden_run_model(self):

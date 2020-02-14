@@ -13,8 +13,8 @@ from tensorflow.python.keras import backend as K
 
 
 class ModelManager:
-    def __init__(self, path_to_model, layer_name, batched_tf_dataset, batch_size):
-        self._org_model = tf.keras.models.load_model(path_to_model)
+    def __init__(self, model, layer_name, batched_tf_dataset, batch_size):
+        self._org_model = model #tf.keras.models.load_model(path_to_model)
 
         self._selected_layer = self._org_model.get_layer(layer_name)
 
