@@ -49,7 +49,7 @@ class ModelManager:
             layer_output_values[i] = functor(batch)
             image_names_for_output_values.append(batch[1])
 
-        return (layer_output_values, images_names_for_output_values)
+        return (layer_output_values, image_names_for_output_values)
 
     def get_org_model(self):
         """Returns the provided model"""
