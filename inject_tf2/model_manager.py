@@ -18,7 +18,7 @@ class ModelManager:
 
         self._selected_layer = self._org_model.get_layer(layer_name)
 
-        self._layer_output_values = self._get_output_values_for_selected_layer(
+        self._layer_output = self._get_output_values_for_selected_layer(
             batched_tf_dataset, batch_size
         )
 
@@ -42,11 +42,14 @@ class ModelManager:
         layer_output_values = np.zeros(
             (num_of_batches, batch_size, *layer_output_tensor.shape[1:]), dtype=ds_dtype)
 
+        image_names_for_output_values = []
+
         # Get the output values for the input data.
         for i, batch in enumerate(batched_tf_dataset):
             layer_output_values[i] = functor(batch)
+            image_names_for_output_values.append(batch[1])
 
-        return layer_output_values
+        return (layer_output_values, images_names_for_output_values)
 
     def get_org_model(self):
         """Returns the provided model"""
@@ -55,7 +58,12 @@ class ModelManager:
     def get_selected_layer_output_values(self):
         """Returns the output values for the selected layer
         for the provided test data."""
-        return self._layer_output_values
+        return self._layer_output[1]
+
+    def get_selected_layer_output(self):
+        """Returns the output values and corresponding image names
+        for the selected layer for the provided test data."""
+        return self._layer_output
 
     def predict_func_from_layer(self):
         """Returns a prediction function which feed its input argument into the
