@@ -111,9 +111,7 @@ class InjectTF2:
 
         res_top_k_batched = []
 
-        for input_values, batch in zip(
-            self.mm.get_selected_layer_output_values(), self.batched_ds
-        ):
+        for input_values, image_names in self.mm.get_selected_layer_output_values():
 
             # Get the prediction function for the selected layer.
             predict = self.mm.predict_func_from_layer()
@@ -128,7 +126,7 @@ class InjectTF2:
             else:
                 result = predict(self.im.inject_batch(input_values, self.cm.get_data()))
 
-            res_top_k_batched.append(tf.math.top_k(result, k=k))
+            res_top_k_batched.append((tf.math.top_k(result, k=k), image_names))
 
 
         logging.info("Done.")
