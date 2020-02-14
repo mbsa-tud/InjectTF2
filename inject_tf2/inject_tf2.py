@@ -19,7 +19,6 @@ from inject_tf2.config_manager import ConfigurationManager
 class InjectTF2:
     def __init__(
         self,
-        #path_to_model,
         model,
         path_to_config,
         tf_dataset,
@@ -112,7 +111,7 @@ class InjectTF2:
 
         res_top_k_batched = []
 
-        for input_values, image_names in self.mm.get_selected_layer_output_values():
+        for input_values, image_names in zip(*self.mm.get_selected_layer_output()):
 
             # Get the prediction function for the selected layer.
             predict = self.mm.predict_func_from_layer()
