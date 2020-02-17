@@ -10,6 +10,7 @@ import logging
 
 import numpy as np
 import tensorflow as tf
+from tensorflow.python.keras import backend as K
 
 from inject_tf2.injection_manager import InjectionManager
 from inject_tf2.model_manager import ModelManager
@@ -39,9 +40,12 @@ class InjectTF2:
         # (that way a uniform numpy can be pre-allocated).
         self.batched_ds = tf_dataset.batch(batch_size, drop_remainder=True)
 
-        self.mm = ModelManager(
-            model, self.cm.get_selected_layer(), self.batched_ds, batch_size
-        )
+        # WIP: Not using Model Manger anymore, since itermediate values of the
+        # selected layer are no longer saved due to memory issues.
+        # self.mm = ModelManager(
+        #     model, self.cm.get_selected_layer(), self.batched_ds, batch_size
+        # )
+        self._model = model
 
     def evaluate_golden_run_model(self):
         """Evaluates the model using the `.evaluate()` function with the provided dataset."""
@@ -111,23 +115,41 @@ class InjectTF2:
 
         res_top_k_batched = []
 
-        for input_values, image_names in zip(*self.mm.get_selected_layer_output()):
+        for input_values, image_name in self.batched_ds:
 
-            # Get the prediction function for the selected layer.
-            predict = self.mm.predict_func_from_layer()
-
-            result = None
-
-            # `predict()` returns the predictions for the current
-            # `input_values` batch wrapped in a list.
             if not inject:
-                result = predict(input_values)
+
+                # Predict on current batch.
+                result = self._model.predict(input_values)
 
             else:
-                result = predict(self.im.inject_batch(input_values, self.cm.get_data()))
 
-            res_top_k_batched.append((tf.math.top_k(result, k=k), image_names))
+                # Run classificaion on current batch until selected layer.
+                selected_layer = self._model.get_layer(self.cm.get_selected_layer())
 
+                # Create prediction function until selected layer to catch the values.
+                pred_till_layer = K.function(self._model.inputs, selected_layer.output)
+
+                # Catch values.
+                values_of_layer_for_batch = pred_till_layer(input_values)
+
+
+                # Create prediction function from selected layer
+                # to the output of the network.
+                pred_from_layer = K.function(selected_layer.output, self._model.outputs)
+
+                # Inject and predict on injected values from the selected layer onward.
+                result = pred_from_layer(self.im.inject_batch(
+                    values_of_layer_for_batch,
+                    self.cm.get_data()
+                    ))
+
+            # Collect top k elements.
+            res_top_k = tf.math.top_k(result, k=k)
+
+            res_current_batch = (res_top_k, image_name)
+
+            res_top_k_batched.append(res_current_batch)
 
         logging.info("Done.")
 
