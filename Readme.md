@@ -1,6 +1,6 @@
 # Experiment results
 
-Data for graphics in '.yaml' format can be read by using pyyaml library in python
+Data for graphics in '.yml' format can be read by using pyyaml library in python
 
 ## Example
 
