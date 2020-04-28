@@ -4,8 +4,10 @@ Data for graphics in '.yaml' format can be read by using pyyaml library in pytho
 
 ## Example
 
-> import yaml
-> out_file = './class_distributions_vgg16_plot_data.yml'
+```python
+import yaml
+out_file = './class_distributions_vgg16_plot_data.yml'
 
-> with open(out_file, "r") as f:
->    plot_data = yaml.load(f, Loader=yaml.UnsafeLoader)
+with open(out_file, "r") as f:
+   plot_data = yaml.load(f, Loader=yaml.UnsafeLoader)
+```
