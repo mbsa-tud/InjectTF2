@@ -88,7 +88,7 @@ class TestInjectionManager(unittest.TestCase):
         self.assertEqual(2.0, np.amax(b_specific))
 
         # Only one element in the array should be equal to 2.0
-        self.assertEqual(1, np.count_nonzero(a_specific.flatten() == 2.0))
+        self.assertEqual(1, np.count_nonzero(b_specific.flatten() == 2.0))
 
 
 if __name__ == "__main__":
