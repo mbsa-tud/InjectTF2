@@ -58,7 +58,7 @@ class ModelManager:
     def get_selected_layer_output_values(self):
         """Returns the output values for the selected layer
         for the provided test data."""
-        return self._layer_output[1]
+        return self._layer_output[0]
 
     def get_selected_layer_output(self):
         """Returns the output values and corresponding image names
