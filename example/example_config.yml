@@ -1,0 +1,5 @@
+inject_layer:
+  layer_name: dense_1
+  fault_type: BitFlip
+  bit_flip_type: RandomBit
+  probability: 1.0

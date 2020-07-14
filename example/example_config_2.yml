@@ -1,0 +1,6 @@
+inject_layer:
+  layer_name: dense_1
+  fault_type: BitFlip
+  bit_flip_type: SpecificBit
+  bit_number: 31 # Max value is 31, min value is 0
+  probability: 1.0
