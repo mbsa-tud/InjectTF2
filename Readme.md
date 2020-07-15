@@ -1,7 +1,7 @@
 # InjectTF2 - a fault injection framework for TensorFlow 2
 ----
 
-InjectTF2 is a Python 3 framework for fault injection into TensorFlow models. It capable of injecting faults into the output of layers of a neural network. Currently the framework supports sequential models and can inject the following faults:
+InjectTF2 is a Python 3 framework for fault injection into TensorFlow models. It is capable of injecting faults into the output of layers of a neural network. Currently the framework supports sequential models and can inject the following faults:
 
 * Random bit flip into a random element of the output tensor of a layer
 * Specific bit flip into a random element of the output tensor of a layer
